@@ -98,7 +98,7 @@ app.post('/join', async (req, res) => {
 });
 
 // 로그인 요청
-app.post('/login', async(req, res) => {
+app.post('/login', async (req, res) => {
     // 1) useremail 값에 일치하는 데이터가 있는지 확인
     // 2) userpass를 암호화해서 쿼리 결과의 패스워드와 일치하는지 확인
     const {useremail, userpass} = req.body;
@@ -120,6 +120,54 @@ app.post('/login', async(req, res) => {
         }
     })
 });
+
+// 아이디 찾기 요청
+app.post('/findid', async (req, res) => {
+    const {m_name, m_phone} = req.body;
+    conn.query(`select * from member where m_name='${m_name}' and m_phone='${m_phone}'`, (err, result, fields) => {
+        if(result) {
+            res.send(result[0].m_email);
+        } 
+        console.log(err);
+    })
+})
+
+// 비밀번호 찾기 요청
+app.post('/findpass', async (req, res) => {
+    const {m_name, m_email} = req.body;
+    conn.query(`select * from member where m_name='${m_name}' and m_email='${m_email}'`, (err, result, fields) => {
+        if(result) {
+           res.send(result[0].m_email);
+        } 
+        console.log(err);
+    })
+})
+
+// 비밀번호 변경 요청
+app.patch('/updatepass', async (req, res) => {
+    const {m_pass, m_email} = req.body;
+    const mytextpass = m_pass;
+    let mypass = '';
+    if(mytextpass !== '' && mytextpass != undefined) {
+        bcrypt.genSalt(saltRounds, function(err, salt) {
+        bcrypt.hash(mytextpass, salt, function(err, hash) {
+            // hash메서드 호출되면 인자로 넣어준 비밀번호를 암호화 해
+            // 콜백함수 안 hash로 돌려준다. 
+            mypass = hash;
+            // 쿼리 작성
+            // update 테이블 이름 set 필드이름 = 데이터 값 where조건
+            conn.query(`update member set m_pass='${mypass}' where m_email='${m_email}'`, 
+            (err, result, fields) => {
+                if(result) {
+                    console.log(result);
+                    res.send('업데이트 되었습니다.');
+                }
+                    console.log(err);
+                });
+            });
+        });
+    }
+})
 
 app.listen(port, () => {
     console.log('서버가 작동중입니다.');
