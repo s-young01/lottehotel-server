@@ -22,11 +22,14 @@ app.use(express.json());
 app.use('/upload', express.static('upload'));
 
 // storage 생성
+// diskStorage : 이미지를 저장해주는 저장소 역할을 함
 const storage = multer.diskStorage({
+    // 어디에 저장할지 경로를 설정.
     destination: (req, file, cd) => {
-        cd(null, 'upload/');
+        cd(null, 'upload/event/');
     },
     filename: (req, file, cd) => {
+        // 파일 이름은 직접 지정한 이름으로 저장하도록 설정.
         const newFilename = file.originalname;
         cd(null, newFilename);
     }
@@ -34,6 +37,7 @@ const storage = multer.diskStorage({
 // upload객체 생성
 const upload = multer({storage: storage});
 // upload경로로 post요청 왔을 시 응답 구현
+// .single('') : 지정한 경로로 요청이 왔을 때 객체의key이름을 받아 처리해서 넣어줌
 app.post('/upload', upload.single('file'), (req, res) => {
     res.send({
         imgUrl: req.file.filename
@@ -54,7 +58,7 @@ conn.connect();
 // get 요청 방식
 // conn.query('쿼리문', 콜백함수) : 쿼리문 보내기
 app.get('/special', (req, res) => {
-    conn.query("select * from event where e_category = 'special'", 
+    conn.query("select * from event where e_category = 'special' limit 3", 
     (error, result, fields) => {
         res.send(result);
     });
@@ -168,6 +172,23 @@ app.patch('/updatepass', async (req, res) => {
         });
     }
 })
+
+// 이벤트 등록 요청
+app.post('/event', async (req, res) => {
+    const {e_title, e_time, e_titledesc, 
+        e_category, e_img1, e_img2, e_desc} = req.body;
+    // 쿼리문 작성 1) insert into 테이블이름(필드명...) values(값...)
+    // 2) insert into 테이블이름(필드명...) values(?,...), [변수명, ...]
+    conn.query(`insert into event(e_title, e_time, e_titledesc, e_category, e_img1, e_img2, e_desc) values(?,?,?,?,?,?,?)`, [e_title, e_time, e_titledesc, e_category, e_img1, e_img2, e_desc],
+    (err, result, fields) => {
+        if(result) {
+            console.log(result);
+            res.send('OK');
+        } else {
+            console.log(err);
+        }
+    });
+});
 
 app.listen(port, () => {
     console.log('서버가 작동중입니다.');
