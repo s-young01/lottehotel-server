@@ -57,8 +57,9 @@ conn.connect();
 
 // get 요청 방식
 // conn.query('쿼리문', 콜백함수) : 쿼리문 보내기
-app.get('/special', (req, res) => {
-    conn.query("select * from event where e_category = 'special' limit 3", 
+app.get('/specials/:limits', (req, res) => {
+    const {limits} = req.params;
+    conn.query(`select * from event where e_category = 'special' limit ${limits}`, 
     (error, result, fields) => {
         res.send(result);
     });
@@ -67,6 +68,13 @@ app.get('/special/:no', (req, res) => {
     const {no} = req.params; // req : {params : {no : 1}}
     conn.query(`select * from event where e_category='special' and e_no=${no}`,
     (error, result, fields) => {
+        res.send(result);
+    });
+});
+
+// 객실 데이터 get 요청
+app.get('/room', (req, res) => {
+    conn.query('select * from guestroom', (error, result, fields) => {
         res.send(result);
     });
 });
@@ -179,12 +187,28 @@ app.post('/event', async (req, res) => {
         e_category, e_img1, e_img2, e_desc} = req.body;
     // 쿼리문 작성 1) insert into 테이블이름(필드명...) values(값...)
     // 2) insert into 테이블이름(필드명...) values(?,...), [변수명, ...]
-    conn.query(`insert into event(e_title, e_time, e_titledesc, e_category, e_img1, e_img2, e_desc) values(?,?,?,?,?,?,?)`, [e_title, e_time, e_titledesc, e_category, e_img1, e_img2, e_desc],
-    (err, result, fields) => {
+    conn.query(`insert into event(e_title, e_time, e_titledesc, e_category, e_img1, e_img2, e_desc) values(?,?,?,?,?,?,?)`, 
+    [e_title, e_time, e_titledesc, e_category, e_img1, e_img2, e_desc], (err, result, fields) => {
         if(result) {
             console.log(result);
             res.send('OK');
-        } else {
+        }else {
+            console.log(err);
+        }
+    });
+});
+
+// 객실 등록 요청
+app.post('/room', async (req, res) => {
+    const {r_name, r_size, r_price, r_bed, r_amenity, 
+        r_desc, r_img1, r_img2, r_img3, r_img4} = req.body;
+    // 쿼리문 작성
+    conn.query(`insert into guestroom(r_name, r_size, r_price, r_bed, r_amenity, r_desc, r_img1, r_img2, r_img3, r_img4) values(?,?,?,?,?,?,?,?,?,?)`,
+    [r_name, r_size, r_price, r_bed, r_amenity, r_desc, r_img1, r_img2, r_img3, r_img4], (err, result, fields) => {
+        if(result) {
+            console.log(result);
+            res.send('OK');
+        }else {
             console.log(err);
         }
     });
