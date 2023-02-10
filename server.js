@@ -78,6 +78,13 @@ app.get('/room', (req, res) => {
         res.send(result);
     });
 });
+app.get('/roomdetail/:no', (req, res) => {
+    const {no} = req.params;
+    conn.query(`select * from guestroom where r_no=${no}`, 
+    (error, result, fields) => {
+        res.send(result[0]);
+    });
+});
 
 // 회원가입 요청
 app.post('/join', async (req, res) => {
